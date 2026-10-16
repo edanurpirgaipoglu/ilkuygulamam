@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fare & Klavye Macerası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fff6e6; --ink:#2a2150; --coral:#ff6b6b; --sun:#ffc93c; --mint:#2ec4b6;
+    --sky:#4d96ff; --grape:#9b5de5; --leaf:#5cc96b; --line:3px solid var(--ink);
+    --shadow:5px 5px 0 var(--ink);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;color:var(--ink);background:var(--paper);
+    background-image:radial-gradient(#2a215014 1.5px,transparent 1.5px);background-size:22px 22px;
+    user-select:none;-webkit-user-select:none;overflow:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2',cursive;margin:0;line-height:1.05}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .btn{
+    font-family:'Baloo 2',cursive;font-weight:700;font-size:1.25rem;padding:.55em 1.2em;
+    background:var(--sun);border:var(--line);border-radius:16px;box-shadow:var(--shadow);
+    transition:transform .1s,box-shadow .1s;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+  .btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+  .btn.alt{background:#fff}.btn.go{background:var(--mint)}.btn.sm{font-size:1rem;padding:.35em .9em;box-shadow:3px 3px 0 var(--ink)}
+  .screen{position:fixed;inset:0;display:none}
+  .screen.on{display:flex}
+
+  /* ---------- MENU ---------- */
+  #menu{flex-direction:column;overflow-y:auto;padding:28px clamp(16px,4vw,56px) 40px}
+  .hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px 40px;justify-content:space-between;margin-bottom:26px}
+  .hero h1{font-size:clamp(2.6rem,6vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+  .hero h1 .m{color:var(--coral)} .hero h1 .k{color:var(--sky)}
+  .hero h1 span.tilt{display:inline-block;transform:rotate(-4deg)}
+  .hero p{font-size:1.15rem;margin:.5em 0 0;max-width:34ch;font-weight:700;opacity:.8}
+  .namebox{background:#fff;border:var(--line);border-radius:20px;box-shadow:var(--shadow);padding:14px 18px;display:flex;gap:12px;align-items:center;transform:rotate(1.5deg)}
+  .namebox label{font-family:'Baloo 2';font-weight:700;font-size:1.1rem}
+  .namebox input{font:700 1.2rem 'Nunito';border:var(--line);border-radius:12px;padding:.35em .6em;width:12ch;background:var(--paper);color:var(--ink);user-select:text}
+  .totals{font-family:'Baloo 2';font-weight:800;font-size:1.3rem;background:var(--grape);color:#fff;border:var(--line);border-radius:999px;padding:.2em .9em;box-shadow:3px 3px 0 var(--ink)}
+  .section-title{display:flex;align-items:center;gap:12px;margin:18px 0 12px;font-family:'Baloo 2';font-weight:800;font-size:1.5rem}
+  .section-title i{font-style:normal;font-size:.95rem;font-family:'Nunito';background:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .7em}
+  .map{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+  .card{
+    position:relative;text-align:left;background:#fff;border:var(--line);border-radius:22px;box-shadow:var(--shadow);
+    padding:14px 16px 12px;min-height:150px;display:flex;flex-direction:column;gap:4px;transition:transform .15s;
+  }
+  .card:nth-child(odd){transform:rotate(-1deg)} .card:nth-child(even){transform:rotate(1deg)}
+  .card:not(.locked):hover{transform:translateY(-4px) rotate(0)}
+  .card .num{position:absolute;top:-14px;right:14px;font-family:'Baloo 2';font-weight:800;background:var(--ink);color:#fff;border-radius:999px;padding:0 .7em;font-size:1rem}
+  .card .ico{font-size:2.6rem;line-height:1}
+  .card h3{font-size:1.35rem;font-weight:800}
+  .card .skill{font-size:.9rem;font-weight:700;opacity:.7}
+  .card .st{margin-top:auto;font-size:1.3rem;letter-spacing:2px}
+  .card .st .off{filter:grayscale(1);opacity:.25}
+  .card.mouse{background:linear-gradient(#fff,#fff) padding-box}
+  .card.mouse .ico{filter:drop-shadow(3px 3px 0 #ff6b6b55)}
+  .card.keyboard .ico{filter:drop-shadow(3px 3px 0 #4d96ff55)}
+  .card.locked{background:#ece4d4;cursor:not-allowed}
+  .card.locked > *:not(.num):not(.lock){opacity:.35}
+  .card .lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem}
+  .card.next{animation:nudge 1.6s ease-in-out infinite}
+  @keyframes nudge{50%{transform:translateY(-6px) rotate(0)}}
+  .footer{margin-top:30px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-weight:700}
+  .footer .grow{flex:1}
+  .footer a{color:var(--ink)}
+
+  /* ---------- GAME ---------- */
+  #game{flex-direction:column;padding:12px clamp(10px,2vw,22px) 16px;gap:12px}
+  .hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hud .title{font-family:'Baloo 2';font-weight:800;font-size:1.5rem}
+  .hud .title small{display:block;font-size:.85rem;font-family:'Nunito';opacity:.7;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+  .hud .grow{flex:1}
+  .pill{font-family:'Baloo 2';font-weight:700;font-size:1.15rem;background:#fff;border:var(--line);border-radius:999px;padding:.15em .9em;box-shadow:3px 3px 0 var(--ink);white-space:nowrap}
+  .pill.err{background:#ffe0e0}
+  .bar{flex:1 1 200px;max-width:380px;height:26px;background:#fff;border:var(--line);border-radius:999px;overflow:hidden;box-shadow:3px 3px 0 var(--ink)}
+  .bar > div{height:100%;width:0;background:repeating-linear-gradient(-45deg,var(--leaf) 0 12px,#4fb85d 12px 24px);transition:width .3s}
+  .task{font-family:'Baloo 2';font-weight:700;font-size:1.35rem;background:var(--sun);border:var(--line);border-radius:14px;padding:.25em .8em;box-shadow:3px 3px 0 var(--ink);min-height:1.9em}
+  .task:empty{display:none}
+  #arena{
+    position:relative;flex:1;border:var(--line);border-radius:26px;overflow:hidden;box-shadow:var(--shadow);
+    background:linear-gradient(#bfe3ff,#e9f6ff 70%,#d4f2d0 70.2%,#c3eabb);
+  }
+  #arena.space{background:radial-gradient(ellipse at 50% 120%,#5a3fa8,#1d1640 60%,#0e0b24)}
+  #arena.space::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1.5px),radial-gradient(#fff9 1px,transparent 1.5px);background-size:90px 90px,53px 53px;background-position:0 0,20px 31px;opacity:.7}
+  #arena.desk{background:#f4efe6;background-image:linear-gradient(#2a21500d 1px,transparent 1px),linear-gradient(90deg,#2a21500d 1px,transparent 1px);background-size:32px 32px}
+  #arena.night{background:linear-gradient(#2b2a6b,#4b3f9a)}
+  .sprite{position:absolute;left:0;top:0}
+
+  /* intro / result overlays */
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#2a215066;z-index:50;padding:16px}
+  .sheet{background:#fff;border:var(--line);border-radius:28px;box-shadow:8px 8px 0 var(--ink);padding:26px 30px;max-width:520px;width:100%;text-align:center;animation:popin .35s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes popin{from{transform:scale(.6);opacity:0}}
+  .sheet .big{font-size:4.5rem;line-height:1}
+  .sheet h2{font-size:2.2rem;font-weight:800;margin:.15em 0}
+  .sheet p{font-size:1.15rem;font-weight:700;margin:.4em 0}
+  .sheet .tip{background:var(--paper);border:2px dashed var(--ink);border-radius:14px;padding:.6em .9em;font-size:1rem;text-align:left;margin:14px 0}
+  .sheet .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .stars{font-size:3.4rem;letter-spacing:6px;margin:6px 0}
+  .stars span{display:inline-block;animation:starin .5s cubic-bezier(.2,1.8,.4,1) backwards}
+  .stars span.off{filter:grayscale(1);opacity:.25}
+  .stars span:nth-child(2){animation-delay:.2s}.stars span:nth-child(3){animation-delay:.4s}
+  @keyframes starin{from{transform:scale(0) rotate(-90deg)}}
+  .stats{display:flex;justify-content:center;gap:14px;font-weight:800}
+  .toast{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:var(--ink);color:#fff;font-family:'Baloo 2';font-weight:700;font-size:1.3rem;padding:.3em 1em;border-radius:999px;z-index:40;pointer-events:none;animation:toast 1.6s forwards}
+  @keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+  .float{position:absolute;font-family:'Baloo 2';font-weight:800;font-size:1.8rem;pointer-events:none;z-index:30;animation:floatup .8s forwards;transform:translate(-50%,-50%)}
+  .float.good{color:#1f9d55;text-shadow:2px 2px 0 #fff}.float.bad{color:var(--coral);text-shadow:2px 2px 0 #fff}
+  @keyframes floatup{to{opacity:0;margin-top:-50px}}
+  .shake{animation:shake .35s}
+  @keyframes shake{20%,60%{translate:-7px 0}40%,80%{translate:7px 0}}
+  .confetti{position:fixed;top:-20px;width:12px;height:18px;z-index:100;pointer-events:none;animation:fall linear forwards;border:2px solid var(--ink)}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+  /* L1 balloons */
+  .balloon{width:70px;height:86px;border:var(--line);border-radius:50% 50% 46% 46%/55% 55% 45% 45%;background:radial-gradient(circle at 32% 28%,#ffffffb0 0 10%,transparent 11%),var(--c);cursor:crosshair}
+  .balloon::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:46px;background:var(--ink);transform:translateX(-50%)}
+  .balloon::before{content:"";position:absolute;left:50%;top:calc(100% - 2px);border:7px solid transparent;border-bottom-color:var(--ink);transform:translate(-50%,-6px) rotate(180deg)}
+  .balloon.pop{animation:pop .25s forwards}
+  @keyframes pop{to{transform:scale(1.7);opacity:0}}
+  /* L2 star */
+  .star{font-size:var(--s);line-height:1;cursor:pointer;animation:shrink var(--t) linear forwards;filter:drop-shadow(3px 3px 0 var(--ink))}
+  @keyframes shrink{0%{transform:scale(0) rotate(-40deg)}10%{transform:scale(1.1)}15%{transform:scale(1)}100%{transform:scale(.15) rotate(30deg);opacity:.5}}
+  .star.got{animation:pop .3s forwards}
+  /* L3 gifts */
+  .gifts{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:clamp(10px,2vw,24px);padding:clamp(14px,3vw,36px)}
+  .gift{position:relative;border:var(--line);border-radius:20px;background:var(--c);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:clamp(2rem,5vw,3.6rem);cursor:pointer}
+  .gift::before{content:"";position:absolute;left:calc(50% - 10px);top:0;bottom:0;width:20px;background:#ffffffb8;border-left:2px solid var(--ink);border-right:2px solid var(--ink)}
+  .gift::after{content:"🎀";position:absolute;top:-22px;font-size:2.2rem}
+  .gift.open{background:#fff;cursor:default}
+  .gift.open::before,.gift.open::after{display:none}
+  .gift .in{display:none;animation:popin .4s cubic-bezier(.2,1.6,.4,1)}
+  .gift.open .in{display:block}
+  /* L4 drag */
+  .item{font-size:3.2rem;line-height:1;cursor:grab;touch-action:none;filter:drop-shadow(3px 3px 0 #2a215055);z-index:5}
+  .item.dragging{cursor:grabbing;z-index:20;transform:scale(1.25)}
+  .item.back{transition:left .35s,top .35s}
+  .basket{position:absolute;bottom:16px;width:min(40%,300px);height:150px;border:var(--line);border-radius:16px 16px 40px 40px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;background:repeating-linear-gradient(90deg,#d9a35f 0 14px,#c98f48 14px 28px)}
+  .basket h4{margin:0;font-family:'Baloo 2';font-size:1.4rem;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:0 .8em}
+  .basket .got{display:flex;flex-wrap:wrap;justify-content:center;font-size:1.8rem;padding:6px}
+  .basket.hot{outline:5px dashed var(--ink);outline-offset:4px}
+  /* L5 folders */
+  .folders{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:30px 40px;align-content:center}
+  .folder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;cursor:context-menu}
+  .folder:hover{background:#4d96ff22}
+  .folder .f{font-size:clamp(3rem,7vw,5rem);line-height:1;filter:drop-shadow(3px 3px 0 #2a215044)}
+  .folder b{font-family:'Baloo 2';font-size:1.3rem;background:#fff;border:2px solid var(--ink);border-radius:8px;padding:0 .6em}
+  .folder.pulse .f{animation:pop2 .5s}
+  @keyframes pop2{50%{transform:scale(1.3)}}
+  .ctx{position:absolute;z-index:45;background:#fff;border:var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:190px}
+  .ctx button{display:flex;gap:10px;align-items:center;width:100%;border:0;background:none;text-align:left;font-weight:800;font-size:1.15rem;padding:.4em .7em;border-radius:8px}
+  .ctx button:hover{background:var(--sky);color:#fff}
+  /* L6 & L10 falling */
+  .bub{width:70px;height:70px;border:var(--line);border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0 12%,transparent 13%),var(--c);display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:2.4rem;text-transform:none}
+  .bub.pop{animation:pop .25s forwards}
+  .rock{width:78px;height:78px;border:var(--line);border-radius:44% 56% 50% 50%/52% 44% 56% 48%;background:radial-gradient(circle at 30% 30%,#b7a99a,#7b6c5f);display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:2.4rem;color:#fff;text-shadow:2px 2px 0 var(--ink)}
+  .rock.click{background:radial-gradient(circle at 30% 30%,#ffb3b3,#ff6b6b);cursor:crosshair;font-size:2rem}
+  .rock.boom{animation:pop .3s forwards}
+  .ship{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:3.4rem;z-index:6;filter:drop-shadow(0 0 12px #ffc93c)}
+  .laser{position:absolute;height:5px;background:linear-gradient(90deg,#ffc93c,#fff);transform-origin:0 50%;border-radius:4px;z-index:5;animation:fade .25s forwards;box-shadow:0 0 10px #ffc93c}
+  @keyframes fade{to{opacity:0}}
+  .ground{position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(90deg,var(--coral) 0 18px,var(--ink) 18px 36px)}
+  /* L7 maze */
+  .maze{position:absolute;display:grid;gap:3px}
+  .cell{border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .cell.w{background:var(--grape);border:2px solid var(--ink)}
+  .cell.p{background:#ffffff1c}
+  .robot,.goal{position:absolute;display:flex;align-items:center;justify-content:center;transition:left .12s,top .12s;z-index:3}
+  /* keyboard visual */
+  .kb{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#3a3166;border:var(--line);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow);width:min(96%,760px);z-index:8}
+  .kb .r{display:flex;gap:5px}
+  .kb .key{flex:var(--w,1) 1 0;height:clamp(24px,4.4vh,40px);background:#f3eefc;border:2px solid var(--ink);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(.65rem,1.5vw,1rem);box-shadow:0 3px 0 #1a1438;white-space:nowrap;overflow:hidden;transition:background .1s}
+  .kb .key.hl{background:var(--sun);animation:glow 1s infinite}
+  .kb .key.ok{background:var(--leaf)}.kb .key.no{background:var(--coral)}
+  .kb .key.bump{text-decoration:underline 3px}
+  @keyframes glow{50%{box-shadow:0 0 0 4px #ffc93caa,0 3px 0 #1a1438}}
+  .kb.compact .key{height:clamp(20px,3.4vh,30px)}
+  /* L8 big key */
+  .bigkey{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);background:#f3eefc;border:4px solid var(--ink);border-radius:22px;box-shadow:0 10px 0 var(--ink);padding:.3em 1.2em;font-family:'Baloo 2';font-weight:800;font-size:clamp(2.4rem,7vw,4.4rem);white-space:nowrap}
+  .bigkey small{display:block;font-size:1.1rem;font-family:'Nunito';text-align:center;opacity:.7}
+  .bigkey.press{animation:press .2s}
+  @keyframes press{50%{transform:translate(-50%,-44%);box-shadow:0 3px 0 var(--ink)}}
+  /* L9 words */
+  .word{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);display:flex;gap:6px}
+  .word span{font-family:'Baloo 2';font-weight:800;font-size:clamp(2.4rem,7vw,4.6rem);width:1.1em;text-align:center;background:#fff;border:var(--line);border-radius:12px;box-shadow:0 5px 0 var(--ink);line-height:1.3}
+  .word span.done{background:var(--leaf);color:#fff}
+  .word span.cur{background:var(--sun);transform:translateY(-6px)}
+  .rocket{position:absolute;left:8%;font-size:3.6rem;transition:bottom .5s cubic-bezier(.3,1.5,.5,1);z-index:2}
+  .moon{position:absolute;left:calc(8% - 4px);top:12px;font-size:3.6rem}
+  /* certificate */
+  #cert{align-items:center;justify-content:center;padding:20px;overflow:auto}
+  .certbox{background:#fff;border:6px double var(--ink);outline:var(--line);outline-offset:8px;border-radius:12px;max-width:760px;width:100%;padding:40px;text-align:center;box-shadow:12px 12px 0 var(--ink)}
+  .certbox h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:var(--grape)}
+  .certbox .nm{font-family:'Baloo 2';font-weight:800;font-size:clamp(2.2rem,6vw,3.8rem);border-bottom:4px dotted var(--ink);display:inline-block;padding:0 .5em;margin:.3em 0}
+  .certbox p{font-size:1.2rem;font-weight:700}
+  @media print{body{background:#fff}.noprint{display:none!important}.certbox{box-shadow:none}}
+  @media (max-height:640px){.kb{display:none}}
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<section id="menu" class="screen on">
+  <div class="hero">
+    <div>
+      <h1><span class="tilt m">Fare</span> &amp; <span class="k">Klavye</span><br>Macerası</h1>
+      <p>10 aşamada fareyi ve klavyeyi kullanmayı öğren, yıldızları topla, sertifikanı al!</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-end">
+      <div class="namebox"><label for="nm">Adın:</label><input id="nm" maxlength="24" placeholder="Adını yaz" autocomplete="off"></div>
+      <div class="totals" id="totals">⭐ 0 / 30</div>
+    </div>
+  </div>
+  <div class="section-title">🖱️ Fare Aşamaları <i>1 – 5</i></div>
+  <div class="map" id="mapMouse"></div>
+  <div class="section-title">⌨️ Klavye Aşamaları <i>6 – 10</i></div>
+  <div class="map" id="mapKey"></div>
+  <div class="footer">
+    <button class="btn sm go" id="certBtn" hidden>🏅 Sertifikamı Göster</button>
+    <span class="grow"></span>
+    <label><input type="checkbox" id="teacher"> Öğretmen modu (tüm aşamaları aç)</label>
+    <button class="btn sm alt" id="resetBtn">↺ İlerlemeyi sıfırla</button>
+    <a href="/">← Donanım Laboratuvarı</a>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="hud">
+    <button class="btn sm alt" id="backBtn">← Harita</button>
+    <div class="title" id="hudTitle"></div>
+    <span class="grow"></span>
+    <div class="bar"><div id="bar"></div></div>
+    <div class="pill" id="hudProg">0 / 0</div>
+    <div class="pill err" id="hudMiss">✗ 0</div>
+    <div class="pill" id="hudTime">⏱ 0 sn</div>
+  </div>
+  <div class="task" id="task"></div>
+  <div id="arena"></div>
+</section>
+
+<!-- CERTIFICATE -->
+<section id="cert" class="screen">
+  <div>
+    <div class="certbox">
+      <div style="font-size:3.4rem">🏅</div>
+      <h1>Fare ve Klavye Ustası</h1>
+      <p>Bu sertifika</p>
+      <div class="nm" id="certName"></div>
+      <p>adlı öğrencinin <b>Fare &amp; Klavye Macerası</b>'nın 10 aşamasını<br>başarıyla tamamladığını gösterir.</p>
+      <p style="font-size:2rem" id="certStars"></p>
+      <p id="certDate" style="opacity:.7"></p>
+    </div>
+    <div class="noprint" style="display:flex;gap:14px;justify-content:center;margin-top:28px">
+      <button class="btn" onclick="print()">🖨️ Yazdır</button>
+      <button class="btn alt" id="certBack">← Harita</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ================= core helpers ================= */
+const $ = s => document.querySelector(s);
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const lower = k => k.length === 1 ? k.toLocaleLowerCase('tr') : k;
+const COLORS = ['#ff6b6b', '#ffc93c', '#2ec4b6', '#4d96ff', '#9b5de5', '#5cc96b', '#ff9f43'];
+
+let audio;
+function tone(freq, dur = .12, type = 'sine', vol = .15) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = freq; g.gain.value = vol;
+    g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + dur);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + dur);
+  } catch (e) {}
+}
+const sfx = {
+  good: () => { tone(660, .1, 'triangle'); setTimeout(() => tone(990, .12, 'triangle'), 70); },
+  bad: () => tone(160, .2, 'sawtooth', .08),
+  win: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, .25, 'triangle'), i * 130)),
+};
+
+function confetti() {
+  for (let i = 0; i < 70; i++) {
+    const c = el('div', 'confetti');
+    c.style.left = rand(0, 100) + 'vw';
+    c.style.background = pick(COLORS);
+    c.style.animationDuration = rand(1.8, 3.6) + 's';
+    c.style.animationDelay = rand(0, .6) + 's';
+    document.body.append(c);
+    setTimeout(() => c.remove(), 4500);
+  }
+}
+
+/* ================= on-screen keyboard (Türkçe Q) ================= */
+const KB_ROWS = [
+  [['Escape', 'Esc', 1.2], '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '*', '-', ['Backspace', '⌫ Geri Sil', 2.2]],
+  [['Tab', '⇥ Tab', 1.6], 'q', 'w', 'e', 'r', 't', 'y', 'u', 'ı', 'o', 'p', 'ğ', 'ü', ['Enter', '↵ Enter', 1.6]],
+  [['CapsLock', 'Caps', 1.9], 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ş', 'i', ',', ['Enter2', '', 1.3]],
+  [['Shift', '⇧ Shift', 1.5], '<', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'ö', 'ç', '.', ['Shift', '⇧ Shift', 2.6]],
+  [['Control', 'Ctrl', 1.4], ['Meta', '⊞', 1.2], ['Alt', 'Alt', 1.2], [' ', 'Boşluk', 7], ['AltGraph', 'AltGr', 1.3], ['Control', 'Ctrl', 1.4]],
+];
+function makeKeyboard(compact) {
+  const kb = el('div', 'kb' + (compact ? ' compact' : ''));
+  for (const row of KB_ROWS) {
+    const r = el('div', 'r');
+    for (const k of row) {
+      const [id, label, w] = Array.isArray(k) ? k : [k, k.toLocaleUpperCase('tr'), 1];
+      const key = el('div', 'key', label);
+      key.dataset.k = id === 'Enter2' ? 'Enter' : id;
+      key.style.setProperty('--w', w);
+      if (id === 'f' || id === 'j') key.classList.add('bump');
+      r.append(key);
+    }
+    kb.append(r);
+  }
+  const keys = id => kb.querySelectorAll(`[data-k="${CSS.escape(id)}"]`);
+  kb.highlight = id => { kb.querySelectorAll('.hl').forEach(k => k.classList.remove('hl')); if (id) keys(id).forEach(k => k.classList.add('hl')); };
+  kb.flash = (id, ok) => keys(id).forEach(k => { const c = ok ? 'ok' : 'no'; k.classList.add(c); setTimeout(() => k.classList.remove(c), 220); });
+  return kb;
+}
+
+/* ================= levels ================= */
+const LEVELS = [
+  {
+    id: 'balon', icon: '🎈', title: 'Balon Patlat', skill: 'Fareyi hareket ettirme', type: 'mouse',
+    intro: 'Balonlar uçup gidiyor! Fare imlecini balonların <b>üzerine getir</b>, balon patlasın. Tıklamana gerek yok.',
+    tip: '🖐️ Fareyi avucunla nazikçe tut. Bileğini masada kaydır, fareyi kaldırma.',
+    s3: 1, s2: 4,
+    start(api) {
+      const total = 15; let spawned = 0, resolved = 0, popped = 0; const list = [];
+      api.progress(0, total);
+      const spawn = () => {
+        if (spawned >= total) return; spawned++;
+        const r = api.rect(), b = el('div', 'sprite balloon');
+        b.style.setProperty('--c', pick(COLORS));
+        const o = { e: b, x: rand(20, r.width - 90), y: r.height + 10, v: rand(55, 85) + spawned * 2.5, alive: true };
+        b.style.left = o.x + 'px';
+        b.addEventListener('pointerenter', () => {
+          if (!o.alive) return; o.alive = false; b.classList.add('pop');
+          api.hit(o.x + 35, o.y + 40); api.progress(++popped, total); setTimeout(() => b.remove(), 260); done();
+        });
+        api.arena.append(b); list.push(o);
+      };
+      const done = () => { if (++resolved >= total) api.finish(); };
+      spawn(); api.every(1150, spawn);
+      api.loop(dt => {
+        for (const o of list) if (o.alive) {
+          o.y -= o.v * dt; o.e.style.top = o.y + 'px';
+          if (o.y < -150) { o.alive = false; o.e.remove(); api.miss(o.x + 35, 30, 'Kaçtı!'); done(); }
+        }
+      });
+    }
+  },
+  {
+    id: 'yildiz', icon: '⭐', title: 'Yıldız Avı', skill: 'Sol tık', type: 'mouse',
+    intro: 'Yıldızlar ekranda beliriyor ve küçülüyor. Kaybolmadan önce yıldızın üzerine gel ve farenin <b>sol tuşuna bir kez</b> tıkla!',
+    tip: '☝️ İşaret parmağın sol tuşun, orta parmağın sağ tuşun üzerinde dursun.',
+    s3: 2, s2: 5,
+    start(api) {
+      const total = 15; let n = 0, got = 0;
+      api.progress(0, total);
+      api.arena.addEventListener('pointerdown', e => { if (e.target === api.arena && e.button === 0) { const p = api.local(e); api.miss(p.x, p.y, 'Boşa!'); } });
+      const next = () => {
+        if (n >= total) return api.finish();
+        n++;
+        const r = api.rect(), size = Math.max(46, 100 - n * 3.5), t = Math.max(1.6, 3 - n * .08);
+        const s = el('div', 'sprite star', '⭐');
+        s.style.setProperty('--s', size + 'px'); s.style.setProperty('--t', t + 's');
+        const x = rand(10, r.width - size - 10), y = rand(10, r.height - size - 10);
+        s.style.left = x + 'px'; s.style.top = y + 'px';
+        let live = true;
+        s.addEventListener('pointerdown', e => {
+          if (!live || e.button !== 0) return; live = false; s.classList.add('got');
+          api.hit(x + size / 2, y + size / 2); api.progress(++got, total);
+          setTimeout(() => { s.remove(); next(); }, 250);
+        });
+        s.addEventListener('animationend', () => {
+          if (!live) return; live = false; s.remove(); api.miss(x + size / 2, y + size / 2, 'Kaçtı!'); next();
+        });
+        api.arena.append(s);
+      };
+      next();
+    }
+  },
+  {
+    id: 'hediye', icon: '🎁', title: 'Hediye Kutuları', skill: 'Çift tık', type: 'mouse',
+    intro: 'Kutuların içinde sürprizler var! Bir kutuyu açmak için sol tuşa <b>iki kez hızlıca</b> tıkla: tık-tık!',
+    tip: '⚡ Çift tıklarken fareyi oynatma. İki tık arasında çok bekleme.',
+    s3: 2, s2: 6,
+    start(api) {
+      const prizes = shuffle(['🐶', '🐱', '🦄', '🚀', '🍦', '⚽', '🎸', '🐼', '🦊', '🍕', '🎨', '🐢']);
+      const grid = el('div', 'gifts'); api.arena.append(grid); api.arena.classList.add('desk');
+      let opened = 0; api.progress(0, 12);
+      prizes.forEach((p, i) => {
+        const g = el('div', 'gift', `<span class="in">${p}</span>`);
+        g.style.setProperty('--c', COLORS[i % COLORS.length]);
+        let t;
+        g.addEventListener('click', e => {
+          if (g.classList.contains('open')) return;
+          clearTimeout(t);
+          t = setTimeout(() => {
+            if (g.classList.contains('open')) return;
+            const p = api.local(e); api.miss(p.x, p.y, 'Tık-tık!'); api.shake(g);
+          }, 480);
+          api.track(t);
+        });
+        g.addEventListener('dblclick', e => {
+          clearTimeout(t);
+          if (g.classList.contains('open')) return;
+          g.classList.add('open'); const p = api.local(e); api.hit(p.x, p.y);
+          api.progress(++opened, 12); if (opened === 12) api.after(500, api.finish);
+        });
+        grid.append(g);
+      });
+    }
+  },
+  {
+    id: 'sepet', icon: '🧺', title: 'Meyve Sepeti', skill: 'Sürükle ve bırak', type: 'mouse',
+    intro: 'Meyveleri <b>Meyveler</b> sepetine, sebzeleri <b>Sebzeler</b> sepetine taşı. Sol tuşa <b>basılı tut</b>, sürükle, sepetin üstünde bırak.',
+    tip: '✊ Tuşu bırakmadan fareyi kaydır. Sepetin üstüne gelince tuşu bırak.',
+    s3: 1, s2: 3,
+    start(api) {
+      const fruits = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍐'], veg = ['🥕', '🥦', '🌽', '🍆', '🥒', '🫑'];
+      const items = shuffle([...shuffle(fruits).slice(0, 5).map(e => [e, 'f']), ...shuffle(veg).slice(0, 5).map(e => [e, 'v'])]);
+      const bF = el('div', 'basket', '<h4>🍎 Meyveler</h4><div class="got"></div>');
+      const bV = el('div', 'basket', '<h4>🥕 Sebzeler</h4><div class="got"></div>');
+      bF.style.left = '6%'; bV.style.right = '6%';
+      api.arena.append(bF, bV);
+      const r = api.rect(); let placed = 0; api.progress(0, 10);
+      const cols = 5, cw = (r.width - 80) / cols, rowsH = Math.max(120, r.height - 220);
+      items.forEach(([emo, kind], i) => {
+        const it = el('div', 'sprite item', emo);
+        const hx = 40 + (i % cols) * cw + rand(0, cw - 70), hy = 20 + Math.floor(i / cols) * (rowsH / 2) + rand(0, rowsH / 2 - 70);
+        it.style.left = hx + 'px'; it.style.top = hy + 'px';
+        let ox, oy, drag = false;
+        const over = e => [bF, bV].find(b => { const q = b.getBoundingClientRect(); return e.clientX > q.left && e.clientX < q.right && e.clientY > q.top && e.clientY < q.bottom; });
+        it.addEventListener('pointerdown', e => {
+          if (e.button !== 0) return;
+          drag = true; it.setPointerCapture(e.pointerId); it.classList.remove('back'); it.classList.add('dragging');
+          const p = api.local(e); ox = p.x - parseFloat(it.style.left); oy = p.y - parseFloat(it.style.top);
+        });
+        it.addEventListener('pointermove', e => {
+          if (!drag) return; const p = api.local(e);
+          it.style.left = (p.x - ox) + 'px'; it.style.top = (p.y - oy) + 'px';
+          const b = over(e); [bF, bV].forEach(x => x.classList.toggle('hot', x === b));
+        });
+        const drop = e => {
+          if (!drag) return; drag = false; it.classList.remove('dragging'); [bF, bV].forEach(x => x.classList.remove('hot'));
+          const b = over(e), p = api.local(e);
+          const back = () => { it.classList.add('back'); it.style.left = hx + 'px'; it.style.top = hy + 'px'; };
+          if (!b) return back();
+          if ((b === bF) === (kind === 'f')) {
+            api.hit(p.x, p.y); it.remove(); b.querySelector('.got').append(emo);
+            api.progress(++placed, 10); if (placed === 10) api.after(500, api.finish);
+          } else { api.miss(p.x, p.y, kind === 'f' ? 'Bu bir meyve!' : 'Bu bir sebze!'); api.shake(b); back(); }
+        };
+        it.addEventListener('pointerup', drop); it.addEventListener('pointercancel', drop);
+        api.arena.append(it);
+      });
+    }
+  },
+  {
+    id: 'sagtik', icon: '📂', title: 'Sağ Tık Dedektifi', skill: 'Sağ tık ve menü', type: 'mouse',
+    intro: 'Bilgisayardaki klasörlerle çalışıyoruz. Yukarıdaki görevi oku, doğru klasöre <b>sağ tıkla</b> ve açılan menüden doğru komutu seç.',
+    tip: '🖱️ Sağ tık, bir şeyle neler yapabileceğini gösteren menüyü açar.',
+    s3: 1, s2: 3,
+    start(api) {
+      api.arena.classList.add('desk');
+      const names = [['Resimler', '🖼️'], ['Müzik', '🎵'], ['Oyunlar', '🎮'], ['Ödevler', '📚'], ['Videolar', '🎬'], ['Belgeler', '📄']];
+      const acts = [['Aç', '📂'], ['Kopyala', '📋'], ['Yeniden Adlandır', '✏️'], ['Sil', '🗑️']];
+      const tasks = shuffle(names).slice(0, 6).map((n, i) => [n[0], acts[i % 4][0]]);
+      const box = el('div', 'folders'); api.arena.append(box);
+      let k = 0, menu;
+      const closeMenu = () => { menu && menu.remove(); menu = null; };
+      const showTask = () => {
+        if (k >= tasks.length) return api.finish();
+        const [n, a] = tasks[k]; api.task(`Görev ${k + 1}/6: <u>${n}</u> klasörüne sağ tıkla → <u>${a}</u> komutunu seç`);
+      };
+      api.progress(0, 6); showTask();
+      api.arena.addEventListener('contextmenu', e => e.preventDefault());
+      api.arena.addEventListener('pointerdown', e => { if (menu && !menu.contains(e.target)) closeMenu(); });
+      names.forEach(([n, ic]) => {
+        const f = el('div', 'folder', `<div class="f">📁</div><b>${ic} ${n}</b>`);
+        f.addEventListener('click', e => { const p = api.local(e); api.miss(p.x, p.y, 'Sağ tuşu kullan!'); api.shake(f); });
+        f.addEventListener('contextmenu', e => {
+          e.preventDefault(); closeMenu();
+          const p = api.local(e), r = api.rect();
+          menu = el('div', 'ctx');
+          menu.style.left = Math.min(p.x, r.width - 210) + 'px'; menu.style.top = Math.min(p.y, r.height - 200) + 'px';
+          acts.forEach(([a, ai]) => {
+            const b = el('button', '', `<span>${ai}</span>${a}`);
+            b.addEventListener('click', ev => {
+              ev.stopPropagation(); closeMenu();
+              const [tn, ta] = tasks[k], q = api.local(ev);
+              if (tn === n && ta === a) {
+                api.hit(q.x, q.y); f.classList.remove('pulse'); void f.offsetWidth; f.classList.add('pulse');
+                api.toast({ 'Aç': `${n} klasörü açıldı!`, 'Kopyala': `${n} kopyalandı!`, 'Yeniden Adlandır': 'Yeni ad verildi!', 'Sil': `${n} geri dönüşüm kutusuna gitti… şaka şaka 😄` }[a]);
+                k++; api.progress(k, 6); api.after(700, showTask);
+              } else api.miss(q.x, q.y, tn !== n ? 'Yanlış klasör' : 'Yanlış komut');
+            });
+            menu.append(b);
+          });
+          api.arena.append(menu);
+        });
+        box.append(f);
+      });
+    }
+  },
+  {
+    id: 'harf', icon: '🔤', title: 'Harf Yağmuru', skill: 'Orta sıra harfleri', type: 'keyboard',
+    intro: 'Harfler yağıyor! Yere düşmeden önce klavyede <b>o harfin tuşuna</b> bas. Bu aşamada klavyenin orta sırasındaki harfler var.',
+    tip: '👆 İşaret parmaklarını <b>F</b> ve <b>J</b> tuşlarına koy. Bu tuşlardaki küçük çıkıntıları hissedebilirsin!',
+    s3: 2, s2: 6,
+    start(api) {
+      api.arena.classList.add('night');
+      const kb = makeKeyboard(true); api.arena.append(kb);
+      const letters = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ş', 'i'];
+      const total = 20; let spawned = 0, resolved = 0, got = 0; const list = [];
+      api.progress(0, total);
+      const floor = () => api.rect().height - (kb.offsetParent ? kb.offsetHeight + 24 : 0) - 70;
+      const done = () => { if (++resolved >= total) api.after(400, api.finish); };
+      const spawn = () => {
+        if (spawned >= total) return; spawned++;
+        const ch = pick(letters), b = el('div', 'sprite bub', ch.toLocaleUpperCase('tr'));
+        b.style.setProperty('--c', pick(COLORS));
+        const o = { e: b, ch, x: rand(10, api.rect().width - 80), y: -70, v: 38 + spawned * 2.2, alive: true };
+        b.style.left = o.x + 'px'; api.arena.append(b); list.push(o);
+      };
+      spawn(); api.every(1700, spawn);
+      api.loop(dt => {
+        const fl = floor(); let low = null;
+        for (const o of list) if (o.alive) {
+          o.y += o.v * dt; o.e.style.top = o.y + 'px';
+          if (o.y > fl) { o.alive = false; o.e.classList.add('pop'); api.miss(o.x + 35, fl, 'Düştü!'); done(); }
+          else if (!low || o.y > low.y) low = o;
+        }
+        kb.highlight(low && low.ch);
+      });
+      api.onKey(e => {
+        const k = lower(e.key); if (k.length !== 1 || k === ' ') return;
+        const target = list.filter(o => o.alive && o.ch === k).sort((a, b) => b.y - a.y)[0];
+        if (target) { target.alive = false; target.e.classList.add('pop'); kb.flash(k, true); api.hit(target.x + 35, target.y + 35); api.progress(++got, total); done(); }
+        else { kb.flash(k, false); api.miss(api.rect().width / 2, 60, `"${k.toLocaleUpperCase('tr')}" yağmıyor`); }
+      });
+    }
+  },
+  {
+    id: 'robot', icon: '🤖', title: 'Robot Labirenti', skill: 'Yön (ok) tuşları', type: 'keyboard',
+    intro: 'Robotun pili bitmek üzere! <b>Yön tuşlarını</b> (← ↑ → ↓) kullanarak robotu 🔋 pile ulaştır. Duvarlara çarpma!',
+    tip: '⬆️ Yön tuşları klavyenin sağ alt köşesinde, ters T şeklinde durur.',
+    s3: 2, s2: 6,
+    start(api) {
+      api.arena.classList.add('night');
+      const MAZES = [
+        ['###########', '#R..#.....#', '#.#.#.###.#', '#.#...#...#', '#.#####.#.#', '#.......#G#', '###########'],
+        ['#############', '#R....#.....#', '####.##.###.#', '#....#..#...#', '#.####.##.###', '#......#....#', '#.######.##.#', '#........#.G#', '#############'],
+        ['###############', '#R..#.....#...#', '#.#.#.###.#.#.#', '#.#...#...#.#.#', '#.#####.#.#.#.#', '#...#...#...#.#', '###.#.###.###.#', '#.....#......G#', '###############'],
+      ];
+      let mi = 0, m, pos, robot, cs, gx, gy;
+      api.progress(0, 3);
+      const place = (e, x, y) => { e.style.left = gx + x * (cs + 3) + 'px'; e.style.top = gy + y * (cs + 3) + 'px'; };
+      const build = () => {
+        api.arena.querySelectorAll('.maze,.robot,.goal').forEach(e => e.remove());
+        m = MAZES[mi]; const W = m[0].length, H = m.length, r = api.rect();
+        cs = Math.floor(Math.min((r.width - 40) / W, (r.height - 40) / H)) - 3;
+        gx = (r.width - W * (cs + 3)) / 2; gy = (r.height - H * (cs + 3)) / 2;
+        const g = el('div', 'maze'); g.style.left = gx + 'px'; g.style.top = gy + 'px';
+        g.style.gridTemplateColumns = `repeat(${W},${cs}px)`; g.style.gridAutoRows = cs + 'px';
+        let goal;
+        m.forEach((row, y) => [...row].forEach((c, x) => {
+          g.append(el('div', 'cell ' + (c === '#' ? 'w' : 'p')));
+          if (c === 'R') pos = { x, y }; if (c === 'G') goal = { x, y };
+        }));
+        api.arena.append(g);
+        const ge = el('div', 'goal', '🔋'); ge.style.width = ge.style.height = cs + 'px'; ge.style.fontSize = cs * .75 + 'px'; place(ge, goal.x, goal.y);
+        robot = el('div', 'robot', '🤖'); robot.style.width = robot.style.height = cs + 'px'; robot.style.fontSize = cs * .8 + 'px'; place(robot, pos.x, pos.y);
+        api.arena.append(ge, robot);
+        api.task(`Labirent ${mi + 1} / 3`);
+      };
+      build();
+      const DIR = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+      let busy = false;
+      api.onKey(e => {
+        if (busy) return;
+        const d = DIR[e.key];
+        if (!d) { if (e.key.length === 1) api.toast('Yön tuşlarını kullan: ← ↑ → ↓'); return; }
+        const nx = pos.x + d[0], ny = pos.y + d[1], c = m[ny][nx];
+        if (c === '#') { api.miss(gx + nx * (cs + 3) + cs / 2, gy + ny * (cs + 3) + cs / 2, 'Duvar!'); api.shake(robot); return; }
+        pos = { x: nx, y: ny }; place(robot, nx, ny); tone(420 + Math.random() * 60, .05, 'square', .04);
+        if (c === 'G') {
+          busy = true; api.hit(gx + nx * (cs + 3) + cs / 2, gy + ny * (cs + 3)); api.progress(++mi, 3);
+          api.after(600, () => { busy = false; if (mi >= 3) api.finish(); else build(); });
+        }
+      }, true);
+    }
+  },
+  {
+    id: 'ozel', icon: '⏎', title: 'Özel Tuşlar', skill: 'Boşluk, Enter, Shift…', type: 'keyboard',
+    intro: 'Klavyede harflerden başka çok önemli tuşlar da var. Ekranda adı yazan tuşu klavyende bul ve <b>bas</b>. Aşağıdaki klavye resmi sana ipucu verir.',
+    tip: '💡 Boşluk en uzun tuştur. Enter "tamam/onayla", Geri Sil "son harfi sil" demektir.',
+    s3: 1, s2: 4,
+    start(api) {
+      const kb = makeKeyboard(); api.arena.append(kb);
+      const KEYS = [
+        { k: ' ', l: 'Boşluk', d: 'Kelimelerin arasına boşluk koyar' },
+        { k: 'Enter', l: '↵ Enter', d: 'Onaylar ya da alt satıra geçer' },
+        { k: 'Backspace', l: '⌫ Geri Sil', d: 'İmlecin solundaki harfi siler' },
+        { k: 'Shift', l: '⇧ Shift', d: 'Basılı tutunca BÜYÜK harf yazar' },
+        { k: 'Tab', l: '⇥ Tab', d: 'Bir sonraki kutuya geçer' },
+        { k: 'Escape', l: 'Esc', d: 'İptal eder, pencereyi kapatır' },
+      ];
+      const seq = [...shuffle(KEYS), ...shuffle(KEYS)];
+      const big = el('div', 'bigkey'); api.arena.append(big);
+      let i = 0; api.progress(0, seq.length);
+      const show = () => {
+        const q = seq[i]; big.innerHTML = `${q.l}<small>${q.d}</small>`;
+        kb.highlight(i < 6 ? q.k : null);
+        api.task(i < 6 ? 'Sarı yanan tuşa bas!' : 'Şimdi ipucu yok — tuşu kendin bul!');
+      };
+      show();
+      api.onKey(e => {
+        const q = seq[i], k = e.key === 'Spacebar' ? ' ' : e.key;
+        if (k === q.k) {
+          kb.flash(k, true); big.classList.remove('press'); void big.offsetWidth; big.classList.add('press');
+          const r = api.rect(); api.hit(r.width / 2, r.height * .3 - 60); api.progress(++i, seq.length);
+          if (i >= seq.length) api.after(400, api.finish); else show();
+        } else { kb.flash(lower(k), false); const r = api.rect(); api.miss(r.width / 2, r.height * .3 - 60, 'O değil!'); }
+      }, true);
+    }
+  },
+  {
+    id: 'kelime', icon: '🚀', title: 'Kelime Roketi', skill: 'Kelime yazma', type: 'keyboard',
+    intro: 'Ekrandaki kelimeleri harf harf yaz. Her doğru kelime roketi Ay\'a biraz daha yaklaştırır! Türkçe harflere (ç, ğ, ı, ö, ş, ü) dikkat et.',
+    tip: '🔎 Sarı kutudaki harf sıradaki harftir. Klavye resminde de yanar.',
+    s3: 2, s2: 6,
+    start(api) {
+      api.arena.classList.add('space');
+      const kb = makeKeyboard(true); api.arena.append(kb);
+      const words = shuffle(['fare', 'ekran', 'kasa', 'tuş', 'yazıcı', 'çanta', 'kitap', 'güneş', 'öğretmen', 'okul', 'çiçek', 'bilgi', 'müzik', 'kalem']).slice(0, 10);
+      const moon = el('div', 'moon', '🌕'), rocket = el('div', 'rocket', '🚀'), w = el('div', 'word');
+      api.arena.append(moon, rocket, w);
+      let wi = 0, ci = 0;
+      const lift = () => {
+        const h = api.rect().height, base = kb.offsetParent ? kb.offsetHeight + 24 : 16;
+        rocket.style.bottom = base + (h - base - 150) * (wi / words.length) + 'px';
+      };
+      const render = () => {
+        const word = words[wi];
+        w.innerHTML = [...word].map((c, i) => `<span class="${i < ci ? 'done' : i === ci ? 'cur' : ''}">${c.toLocaleUpperCase('tr')}</span>`).join('');
+        kb.highlight(word[ci]);
+      };
+      api.progress(0, words.length); render(); lift();
+      api.onKey(e => {
+        const k = lower(e.key); if (k.length !== 1 || k === ' ') return;
+        const word = words[wi], r = api.rect();
+        if (k === word[ci]) {
+          kb.flash(k, true); tone(500 + ci * 60, .06, 'triangle', .07); ci++;
+          if (ci >= word.length) {
+            api.hit(r.width / 2, r.height * .26 - 50); wi++; ci = 0; api.progress(wi, words.length); lift();
+            if (wi >= words.length) { w.innerHTML = ''; kb.highlight(null); api.after(700, api.finish); return; }
+          }
+          render();
+        } else { kb.flash(k, false); api.miss(r.width / 2, r.height * .26 - 50, `"${word[ci].toLocaleUpperCase('tr')}" olmalı`); api.shake(w); }
+      });
+    }
+  },
+  {
+    id: 'final', icon: '☄️', title: 'Uzay Savunması', skill: 'Fare + klavye birlikte', type: 'keyboard',
+    intro: 'Büyük final! Göktaşları geliyor. <b>Harf yazan</b> göktaşı için klavyede o harfe bas. <b>🖱️ işaretli kırmızı</b> göktaşına fareyle tıkla. Hepsini durdur!',
+    tip: '🦸 Bir elin klavyede, bir elin farede olsun. Gerçek bir bilgisayar ustası gibi!',
+    s3: 3, s2: 7,
+    start(api) {
+      api.arena.classList.add('space');
+      const ship = el('div', 'ship', '🛸'); api.arena.append(ship, el('div', 'ground'));
+      const letters = ['a', 'e', 'i', 'o', 'u', 'k', 'l', 'm', 'n', 'r', 's', 't', 'y', 'd', 'b'];
+      const total = 24; let spawned = 0, resolved = 0, got = 0; const list = [];
+      api.progress(0, total);
+      const done = () => { if (++resolved >= total) api.after(500, api.finish); };
+      const laser = o => {
+        const r = api.rect(), sx = r.width / 2, sy = r.height - 50, tx = o.x + 39, ty = o.y + 39;
+        const l = el('div', 'laser'); l.style.left = sx + 'px'; l.style.top = sy + 'px';
+        l.style.width = Math.hypot(tx - sx, ty - sy) + 'px'; l.style.transform = `rotate(${Math.atan2(ty - sy, tx - sx)}rad)`;
+        api.arena.append(l); setTimeout(() => l.remove(), 260);
+      };
+      const kill = o => { o.alive = false; laser(o); o.e.classList.add('boom'); api.hit(o.x + 39, o.y + 30); api.progress(++got, total); done(); };
+      const spawn = () => {
+        if (spawned >= total) return; spawned++;
+        const click = Math.random() < .4, ch = pick(letters);
+        const e = el('div', 'sprite rock' + (click ? ' click' : ''), click ? '🖱️' : ch.toLocaleUpperCase('tr'));
+        const o = { e, ch: click ? null : ch, x: rand(10, api.rect().width - 90), y: -80, v: 40 + spawned * 1.8, alive: true };
+        e.style.left = o.x + 'px';
+        if (click) e.addEventListener('pointerdown', ev => { if (o.alive && ev.button === 0) kill(o); });
+        api.arena.append(e); list.push(o);
+      };
+      api.arena.addEventListener('pointerdown', e => { if (e.target === api.arena && e.button === 0) { const p = api.local(e); api.miss(p.x, p.y, 'Iska!'); } });
+      spawn(); api.every(1500, spawn);
+      api.loop(dt => {
+        const fl = api.rect().height - 90;
+        for (const o of list) if (o.alive) {
+          o.y += o.v * dt; o.e.style.top = o.y + 'px';
+          if (o.y > fl) { o.alive = false; o.e.classList.add('boom'); api.miss(o.x + 39, fl, 'Çarptı!'); done(); }
+        }
+      });
+      api.onKey(e => {
+        const k = lower(e.key); if (k.length !== 1 || k === ' ') return;
+        const t = list.filter(o => o.alive && o.ch === k).sort((a, b) => b.y - a.y)[0];
+        if (t) kill(t); else api.miss(api.rect().width / 2, 60, `"${k.toLocaleUpperCase('tr')}" yok`);
+      });
+    }
+  },
+];
+
+/* ================= state ================= */
+const store = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem('fk-' + k)) ?? d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem('fk-' + k, JSON.stringify(v)); } catch {} },
+};
+let progress = store.get('progress', {});
+let teacher = store.get('teacher', false);
+const nameInput = $('#nm');
+nameInput.value = store.get('name', '');
+nameInput.addEventListener('input', () => store.set('name', nameInput.value.trim()));
+$('#teacher').checked = teacher;
+$('#teacher').addEventListener('change', e => { teacher = e.target.checked; store.set('teacher', teacher); renderMap(); });
+$('#resetBtn').addEventListener('click', () => { if (confirm('Tüm yıldızlar silinsin mi?')) { progress = {}; store.set('progress', progress); renderMap(); } });
+
+const isOpen = i => teacher || i === 0 || progress[LEVELS[i - 1].id] > 0;
+const starStr = n => [1, 2, 3].map(i => `<span class="${i <= n ? '' : 'off'}">⭐</span>`).join('');
+
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+
+function renderMap() {
+  const mm = $('#mapMouse'), mk = $('#mapKey'); mm.innerHTML = mk.innerHTML = '';
+  let firstOpenUnplayed = LEVELS.findIndex((L, i) => isOpen(i) && !progress[L.id]);
+  LEVELS.forEach((L, i) => {
+    const open = isOpen(i);
+    const c = el('button', `card ${L.type}${open ? '' : ' locked'}${i === firstOpenUnplayed ? ' next' : ''}`,
+      `<span class="num">${i + 1}</span><div class="ico">${L.icon}</div><h3>${L.title}</h3><div class="skill">${L.skill}</div><div class="st">${starStr(progress[L.id] || 0)}</div>${open ? '' : '<div class="lock">🔒</div>'}`);
+    c.addEventListener('click', () => open ? startLevel(i) : (sfx.bad(), c.classList.add('shake'), setTimeout(() => c.classList.remove('shake'), 400)));
+    (L.type === 'mouse' ? mm : mk).append(c);
+  });
+  const total = LEVELS.reduce((s, L) => s + (progress[L.id] || 0), 0);
+  $('#totals').textContent = `⭐ ${total} / ${LEVELS.length * 3}`;
+  $('#certBtn').hidden = !LEVELS.every(L => progress[L.id] > 0);
+}
+
+/* ================= level runner ================= */
+let arena = $('#arena');
+let cur = null, enterAction = null;
+
+function stopLevel() {
+  if (!cur) return;
+  cur.timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  cancelAnimationFrame(cur.raf); clearInterval(cur.clock);
+  cur = null;
+}
+
+function startLevel(i) {
+  stopLevel();
+  const L = LEVELS[i];
+  show('game');
+  const fresh = el('div'); fresh.id = 'arena'; arena.replaceWith(fresh); arena = fresh;
+  $('#task').innerHTML = '';
+  $('#hudTitle').innerHTML = `<small>Aşama ${i + 1} · ${L.type === 'mouse' ? '🖱️ Fare' : '⌨️ Klavye'}</small>${L.icon} ${L.title}`;
+  setProg(0, 1); setMiss(0); $('#hudTime').textContent = '⏱ 0 sn';
+  const ov = el('div', 'overlay', `<div class="sheet"><div class="big">${L.icon}</div><h2>${L.title}</h2><p>${L.intro}</p><div class="tip">${L.tip}</div><div class="row"><button class="btn go">Başla! ▶</button></div><p style="font-size:.9rem;opacity:.6">Klavyeden Enter'a basarak da başlayabilirsin.</p></div>`);
+  arena.append(ov);
+  const go = () => { enterAction = null; ov.remove(); run(i); };
+  ov.querySelector('button').addEventListener('click', go);
+  enterAction = go;
+}
+
+function setProg(n, t) { $('#bar').style.width = (100 * n / t) + '%'; $('#hudProg').textContent = `${n} / ${t}`; }
+function setMiss(n) { $('#hudMiss').textContent = `✗ ${n}`; }
+
+function run(i) {
+  stopLevel();
+  const L = LEVELS[i];
+  const st = cur = { i, timers: [], misses: 0, t0: performance.now(), key: null, keyAll: false, done: false, raf: 0 };
+  st.clock = setInterval(() => { $('#hudTime').textContent = `⏱ ${Math.floor((performance.now() - st.t0) / 1000)} sn`; }, 250);
+  const live = () => cur === st && !st.done;
+  const floater = (x, y, txt, cls) => { const f = el('div', 'float ' + cls, txt); f.style.left = x + 'px'; f.style.top = y + 'px'; arena.append(f); setTimeout(() => f.remove(), 800); };
+  const api = {
+    arena,
+    rect: () => arena.getBoundingClientRect(),
+    local: e => { const r = arena.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; },
+    progress: setProg,
+    hit: (x, y) => { if (!live()) return; sfx.good(); floater(x, y, pick(['+1', 'Süper!', 'Harika!', '+1', 'Bravo!']), 'good'); },
+    miss: (x, y, txt = '✗') => { if (!live()) return; sfx.bad(); st.misses++; setMiss(st.misses); floater(x, y, txt, 'bad'); },
+    shake: e => { e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); },
+    toast: txt => { arena.querySelectorAll('.toast').forEach(t => t.remove()); const t = el('div', 'toast', txt); arena.append(t); setTimeout(() => t.remove(), 1700); },
+    task: html => { $('#task').innerHTML = html; },
+    after: (ms, fn) => st.timers.push(setTimeout(() => live() && fn(), ms)),
+    every: (ms, fn) => st.timers.push(setInterval(() => live() && fn(), ms)),
+    track: t => st.timers.push(t),
+    loop: fn => { let last = performance.now(); const f = now => { if (!live()) return; fn(Math.min(.05, (now - last) / 1000)); last = now; st.raf = requestAnimationFrame(f); }; st.raf = requestAnimationFrame(f); },
+    onKey: (fn, all) => { st.key = fn; st.keyAll = !!all; },
+    finish: () => { if (!live()) return; st.done = true; finishLevel(i, st); },
+  };
+  L.start(api);
+}
+
+window.addEventListener('keydown', e => {
+  if (!cur || !cur.key || cur.done || e.repeat) return;
+  if (['Tab', ' ', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape', 'Enter'].includes(e.key) || e.key.length === 1) e.preventDefault();
+  if (!cur.keyAll && ['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'CapsLock'].includes(e.key)) return;
+  if (e.ctrlKey || e.metaKey) return;
+  cur.key(e);
+});
+// registered after the game handler so the Enter that starts a level isn't also fed to it
+window.addEventListener('keydown', e => {
+  if (!enterAction || e.key !== 'Enter' || e.repeat || !$('#game').classList.contains('on')) return;
+  e.preventDefault(); const f = enterAction; enterAction = null; f();
+});
+
+function finishLevel(i, st) {
+  clearInterval(st.clock); cancelAnimationFrame(st.raf);
+  const L = LEVELS[i], secs = Math.round((performance.now() - st.t0) / 1000);
+  const stars = st.misses <= L.s3 ? 3 : st.misses <= L.s2 ? 2 : 1;
+  const best = Math.max(progress[L.id] || 0, stars);
+  progress[L.id] = best; store.set('progress', progress);
+  const last = i === LEVELS.length - 1, allDone = LEVELS.every(x => progress[x.id] > 0);
+  sfx.win(); if (stars === 3 || last) confetti();
+  const msg = stars === 3 ? 'Mükemmel! Tam bir usta gibisin!' : stars === 2 ? 'Çok iyi! Biraz daha dikkatle 3 yıldız alabilirsin.' : 'Aşamayı geçtin! Tekrar oynayıp daha çok yıldız toplayabilirsin.';
+  const name = nameInput.value.trim();
+  const ov = el('div', 'overlay', `<div class="sheet">
+    <h2>${last ? '🏆 Tüm aşamalar bitti!' : 'Aşama tamam!'}</h2>
+    <div class="stars">${starStr(stars)}</div>
+    <p>${name ? name + ', ' : ''}${msg}</p>
+    <div class="stats"><span class="pill err">✗ ${st.misses} hata</span><span class="pill">⏱ ${secs} sn</span></div>
+    <div class="row">
+      <button class="btn alt" data-a="map">🗺️ Harita</button>
+      <button class="btn alt" data-a="again">↺ Tekrar</button>
+      ${last ? (allDone ? '<button class="btn go" data-a="cert">🏅 Sertifika</button>' : '') : '<button class="btn go" data-a="next">Sonraki Aşama ▶</button>'}
+    </div></div>`);
+  arena.append(ov);
+  const act = a => { enterAction = null; if (a === 'map') backToMap(); else if (a === 'again') startLevel(i); else if (a === 'next') startLevel(i + 1); else if (a === 'cert') showCert(); };
+  ov.querySelectorAll('button').forEach(b => b.addEventListener('click', () => act(b.dataset.a)));
+  setTimeout(() => { if (cur === st) enterAction = () => act(last ? (allDone ? 'cert' : 'map') : 'next'); }, 600);
+}
+
+function backToMap() {
+  enterAction = null; stopLevel(); arena.innerHTML = ''; renderMap(); show('menu');
+}
+$('#backBtn').addEventListener('click', backToMap);
+
+function showCert() {
+  stopLevel();
+  $('#certName').textContent = nameInput.value.trim() || 'Bilgisayar Kahramanı';
+  const total = LEVELS.reduce((s, L) => s + (progress[L.id] || 0), 0);
+  $('#certStars').textContent = `⭐ ${total} / ${LEVELS.length * 3} yıldız`;
+  $('#certDate').textContent = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  show('cert'); confetti();
+}
+$('#certBtn').addEventListener('click', showCert);
+$('#certBack').addEventListener('click', backToMap);
+
+renderMap();
+</script>
+</body>
+</html>
